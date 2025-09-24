@@ -189,51 +189,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Upcoming Contract Maturities */}
-      <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-slate-900">Upcoming Contract Maturities</h3>
-          <Calendar className="w-5 h-5 text-slate-400" />
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">CONTRACT</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">MATURITY DATE</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">OUTSTANDING LIABILITY</th>
-                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">DAYS TO MATURITY</th>
-                <th className="text-center py-3 px-4 text-sm font-medium text-slate-600">STATUS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {upcomingMaturities.map((contract, index) => (
-                <tr key={index} className="border-b border-slate-100 hover:bg-slate-50">
-                  <td className="py-4 px-4 text-sm text-slate-900 font-medium">{contract.contract}</td>
-                  <td className="py-4 px-4 text-sm text-slate-600">{contract.maturityDate}</td>
-                  <td className="py-4 px-4 text-sm text-slate-900 text-right font-medium">
-                    ₦{contract.liability.toLocaleString()}
-                  </td>
-                  <td className="py-4 px-4 text-sm text-slate-600 text-right">
-                    {contract.daysToMaturity > 0 ? `${contract.daysToMaturity} days` : `${Math.abs(contract.daysToMaturity)} days overdue`}
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      contract.status === 'Urgent' 
-                        ? 'bg-red-100 text-red-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {contract.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       {/* Additional Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Payment Performance */}
@@ -284,14 +239,61 @@ export function Dashboard() {
           <h4 className="text-sm font-medium text-slate-600 mb-4">Cost Optimization</h4>
           <div className="space-y-3">
             <div className="text-2xl font-bold text-purple-600">₦2.1M</div>
-            <div className="text-sm text-slate-600">Potential savings identified</div>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-500" />
-              <span className="text-sm text-green-600">+15% vs last year</span>
+              <div className="text-sm text-slate-600">Potential savings identified</div>
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-green-500" />
+                  <span className="text-sm text-green-600">+15% vs last year</span>
+                </div>
+              </div>
             </div>
           </div>
+
+
+      {/* Upcoming Contract Maturities */}
+      <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-slate-900">Upcoming Contract Maturities</h3>
+          <Calendar className="w-5 h-5 text-slate-400" />
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-200">
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">CONTRACT</th>
+                <th className="text-left py-3 px-4 text-sm font-medium text-slate-600">MATURITY DATE</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">OUTSTANDING LIABILITY</th>
+                <th className="text-right py-3 px-4 text-sm font-medium text-slate-600">DAYS TO MATURITY</th>
+                <th className="text-center py-3 px-4 text-sm font-medium text-slate-600">STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {upcomingMaturities.map((contract, index) => (
+                <tr key={index} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-4 px-4 text-sm text-slate-900 font-medium">{contract.contract}</td>
+                  <td className="py-4 px-4 text-sm text-slate-600">{contract.maturityDate}</td>
+                  <td className="py-4 px-4 text-sm text-slate-900 text-right font-medium">
+                    ₦{contract.liability.toLocaleString()}
+                  </td>
+                  <td className="py-4 px-4 text-sm text-slate-600 text-right">
+                    {contract.daysToMaturity > 0 ? `${contract.daysToMaturity} days` : `${Math.abs(contract.daysToMaturity)} days overdue`}
+                  </td>
+                  <td className="py-4 px-4 text-center">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      contract.status === 'Urgent' 
+                        ? 'bg-red-100 text-red-800' 
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {contract.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+
+      </div>
   );
 }
