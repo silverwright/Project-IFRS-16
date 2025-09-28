@@ -47,16 +47,29 @@ export function Home() {
       ],
     },
     {
-      id: "/reports",
-      title: "Disclosures & Journal Entries",
+      id: "/disclosure-journals",
+      title: "Disclosure & Journal Entries",
       description:
-        "Generate compliant disclosures and accounting journal entries automatically.",
+        "Generate compliant disclosures and accounting journal entries automatically with maturity analysis.",
       icon: BookOpen,
       features: [
         "Automated journal entries",
-        "Depreciation calculations",
+        "Key disclosure figures",
+        "Maturity analysis tables",
+        "IFRS 16 compliance reporting",
+      ],
+    },
+    {
+      id: "/reports",
+      title: "Reports & Analytics",
+      description:
+        "Comprehensive reporting and analytics for lease portfolio management.",
+      icon: BookOpen,
+      features: [
+        "Portfolio analytics",
+        "Custom report generation",
         "Period-end reporting",
-        "Compliance disclosures",
+        "Export capabilities",
       ],
     },
     {

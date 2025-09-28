@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { KPICard } from '../Dashboard/KPICard';
-import { DataTable } from '../UI/DataTable';
 import { Button } from '../UI/Button';
-import { DollarSign, TrendingDown, FileText, Download } from 'lucide-react';
+import { DollarSign, TrendingDown, FileText, Download, BarChart3 } from 'lucide-react';
 
 export function ResultsDisplay() {
   const { state } = useLeaseContext();
@@ -15,13 +14,15 @@ export function ResultsDisplay() {
   const tabs = [
     { id: 'summary', name: 'Summary', icon: DollarSign },
     { id: 'cashflow', name: 'Cashflow', icon: TrendingDown },
-    { id: 'amortization', name: 'Amortization', icon: FileText },
-    { id: 'journals', name: 'Journal Entries', icon: FileText },
+    { id: 'amortization', name: 'Amortization', icon: BarChart3 },
   ];
 
   const exportToExcel = () => {
-    // Mock export functionality
     console.log('Exporting to Excel...');
+  };
+
+  const formatCurrency = (value: number) => {
+    return `${leaseData.Currency || 'NGN'} ${value.toLocaleString()}`;
   };
 
   return (
@@ -38,32 +39,63 @@ export function ResultsDisplay() {
         </Button>
       </div>
 
-      {/* KPI Summary */}
+      {/* Enhanced KPI Summary with gradient backgrounds */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Initial Liability"
-          value={`${leaseData.Currency} ${(calculations.initialLiability / 1000000).toFixed(2)}M`}
-          icon={DollarSign}
-          color="blue"
-        />
-        <KPICard
-          title="Initial ROU Asset"
-          value={`${leaseData.Currency} ${(calculations.initialROU / 1000000).toFixed(2)}M`}
-          icon={FileText}
-          color="green"
-        />
-        <KPICard
-          title="Total Interest"
-          value={`${leaseData.Currency} ${(calculations.totalInterest / 1000000).toFixed(2)}M`}
-          icon={TrendingDown}
-          color="purple"
-        />
-        <KPICard
-          title="Total Depreciation"
-          value={`${leaseData.Currency} ${(calculations.totalDepreciation / 1000000).toFixed(2)}M`}
-          icon={TrendingDown}
-          color="orange"
-        />
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-blue-100 text-sm font-medium">Initial Liability</p>
+              <p className="text-2xl font-bold mt-1">
+                {formatCurrency(calculations.initialLiability)}
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <DollarSign className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-emerald-100 text-sm font-medium">Initial ROU Asset</p>
+              <p className="text-2xl font-bold mt-1">
+                {formatCurrency(calculations.initialROU)}
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <FileText className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-purple-100 text-sm font-medium">Total Interest</p>
+              <p className="text-2xl font-bold mt-1">
+                {formatCurrency(calculations.totalInterest)}
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <TrendingDown className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-orange-100 text-sm font-medium">Total Depreciation</p>
+              <p className="text-2xl font-bold mt-1">
+                {formatCurrency(calculations.totalDepreciation)}
+              </p>
+            </div>
+            <div className="bg-white/20 p-3 rounded-lg">
+              <TrendingDown className="w-6 h-6" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -91,35 +123,42 @@ export function ResultsDisplay() {
       {/* Tab Content */}
       <div className="bg-white rounded-lg border border-slate-200 p-6">
         {activeTab === 'summary' && (
-          <div className="space-y-4">
-            <h4 className="font-semibold text-slate-900">Calculation Summary</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Initial Lease Liability:</span>
-                  <span className="font-medium">{leaseData.Currency} {calculations.initialLiability.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Initial ROU Asset:</span>
-                  <span className="font-medium">{leaseData.Currency} {calculations.initialROU.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Lease Term:</span>
-                  <span className="font-medium">{leaseData.NonCancellableYears} years</span>
+          <div className="space-y-6">
+            <h4 className="text-xl font-bold text-slate-900 mb-4">Calculation Summary</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 space-y-4">
+                <h5 className="font-semibold text-slate-800 text-lg">Initial Recognition</h5>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
+                    <span className="text-slate-600">Initial Lease Liability:</span>
+                    <span className="font-bold text-blue-600">{formatCurrency(calculations.initialLiability)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
+                    <span className="text-slate-600">Initial ROU Asset:</span>
+                    <span className="font-bold text-emerald-600">{formatCurrency(calculations.initialROU)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-slate-600">Lease Term:</span>
+                    <span className="font-medium">{leaseData.NonCancellableYears || 0} years</span>
+                  </div>
                 </div>
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Total Interest Expense:</span>
-                  <span className="font-medium">{leaseData.Currency} {calculations.totalInterest.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Total Depreciation:</span>
-                  <span className="font-medium">{leaseData.Currency} {calculations.totalDepreciation.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Payment Frequency:</span>
-                  <span className="font-medium">{leaseData.PaymentFrequency}</span>
+              
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg p-6 space-y-4">
+                <h5 className="font-semibold text-slate-800 text-lg">Total Impact</h5>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
+                    <span className="text-slate-600">Total Interest Expense:</span>
+                    <span className="font-bold text-purple-600">{formatCurrency(calculations.totalInterest)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-slate-200">
+                    <span className="text-slate-600">Total Depreciation:</span>
+                    <span className="font-bold text-orange-600">{formatCurrency(calculations.totalDepreciation)}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-slate-600">Payment Frequency:</span>
+                    <span className="font-medium">{leaseData.PaymentFrequency || 'Monthly'}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -127,43 +166,87 @@ export function ResultsDisplay() {
         )}
 
         {activeTab === 'cashflow' && (
-          <DataTable
-            title="Cashflow Schedule"
-            data={calculations.cashflowSchedule}
-            columns={[
-              { key: 'period', label: 'Period' },
-              { key: 'date', label: 'Date' },
-              { key: 'rent', label: 'Rent Amount', format: (val) => `${leaseData.Currency} ${val.toLocaleString()}` },
-            ]}
-          />
+          <div className="space-y-4">
+            <h4 className="text-xl font-bold text-slate-900">Cashflow Schedule</h4>
+            <div className="overflow-x-auto border border-slate-200 rounded-lg">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-gradient-to-r from-blue-50 to-blue-100">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-blue-800 uppercase tracking-wider">Period</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-blue-800 uppercase tracking-wider">Date</th>
+                    <th className="px-6 py-4 text-right text-xs font-bold text-blue-800 uppercase tracking-wider">Rent Amount</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {calculations.cashflowSchedule.slice(0, 12).map((row, index) => (
+                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className="px-6 py-4 text-sm font-medium text-slate-900">{row.period}</td>
+                      <td className="px-6 py-4 text-sm text-slate-600">{row.date}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-right text-green-600">
+                        {formatCurrency(row.rent)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {calculations.cashflowSchedule.length > 12 && (
+                <div className="bg-slate-50 px-6 py-3 text-sm text-slate-600 text-center border-t border-slate-200">
+                  Showing first 12 of {calculations.cashflowSchedule.length} periods
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {activeTab === 'amortization' && (
-          <DataTable
-            title="Liability Amortization Schedule"
-            data={calculations.amortizationSchedule}
-            columns={[
-              { key: 'period', label: 'Period' },
-              { key: 'opening', label: 'Opening Balance', format: (val) => `${leaseData.Currency} ${val.toLocaleString()}` },
-              { key: 'interest', label: 'Interest', format: (val) => `${leaseData.Currency} ${val.toLocaleString()}` },
-              { key: 'payment', label: 'Payment', format: (val) => `${leaseData.Currency} ${val.toLocaleString()}` },
-              { key: 'closing', label: 'Closing Balance', format: (val) => `${leaseData.Currency} ${val.toLocaleString()}` },
-            ]}
-          />
-        )}
-
-        {activeTab === 'journals' && (
-          <DataTable
-            title="Journal Entries"
-            data={calculations.journalEntries}
-            columns={[
-              { key: 'date', label: 'Date' },
-              { key: 'account', label: 'Account' },
-              { key: 'dr', label: 'Debit', format: (val) => val > 0 ? `${leaseData.Currency} ${val.toLocaleString()}` : '' },
-              { key: 'cr', label: 'Credit', format: (val) => val > 0 ? `${leaseData.Currency} ${val.toLocaleString()}` : '' },
-              { key: 'memo', label: 'Memo' },
-            ]}
-          />
+          <div className="space-y-4">
+            <h4 className="text-xl font-bold text-slate-900">Amortization Schedule</h4>
+            <div className="overflow-x-auto border border-slate-200 rounded-lg shadow-lg">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                  <tr>
+                    <th className="px-4 py-4 text-left text-xs font-bold uppercase tracking-wider">Month</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Payment</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Interest</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Principal</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Remaining Liability</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Depreciation</th>
+                    <th className="px-4 py-4 text-right text-xs font-bold uppercase tracking-wider">Remaining Asset</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {calculations.amortizationSchedule.slice(0, 12).map((row, index) => (
+                    <tr key={index} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gradient-to-r from-slate-50 to-slate-100'} hover:bg-blue-50 transition-colors`}>
+                      <td className="px-4 py-3 text-sm font-bold text-slate-900">{row.month}</td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-blue-600">
+                        {formatCurrency(row.payment)}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-red-600">
+                        {formatCurrency(row.interest)}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-green-600">
+                        {formatCurrency(row.principal)}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-purple-600">
+                        {formatCurrency(row.remainingLiability)}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-orange-600">
+                        {formatCurrency(row.depreciation)}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-right text-indigo-600">
+                        {formatCurrency(row.remainingAsset)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {calculations.amortizationSchedule.length > 12 && (
+                <div className="bg-gradient-to-r from-slate-100 to-slate-200 px-6 py-3 text-sm text-slate-700 text-center border-t border-slate-200 font-medium">
+                  Showing first 12 of {calculations.amortizationSchedule.length} months
+                </div>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>

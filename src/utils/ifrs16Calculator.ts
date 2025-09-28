@@ -1,15 +1,19 @@
 import { LeaseData, CalculationResults } from '../context/LeaseContext';
 
 export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResults {
-  // Mock calculation - in a real implementation, this would contain the actual IFRS 16 logic
+  // Ensure we have valid data with defaults
   const paymentPerPeriod = leaseData.FixedPaymentPerPeriod || 0;
-  const periods = Math.round((leaseData.NonCancellableYears || 0) * getPeriodsPerYear(leaseData.PaymentFrequency || 'Monthly'));
+  const nonCancellableYears = leaseData.NonCancellableYears || 0;
+  const paymentFrequency = leaseData.PaymentFrequency || 'Monthly';
   const ibrAnnual = leaseData.IBR_Annual || 0.14;
-  const ratePerPeriod = Math.pow(1 + ibrAnnual, 1 / getPeriodsPerYear(leaseData.PaymentFrequency || 'Monthly')) - 1;
+  const paymentTiming = leaseData.PaymentTiming || 'Advance';
+  
+  const periods = Math.round(nonCancellableYears * getPeriodsPerYear(paymentFrequency));
+  const ratePerPeriod = Math.pow(1 + ibrAnnual, 1 / getPeriodsPerYear(paymentFrequency)) - 1;
 
-  // Calculate PV of lease payments (simplified)
+  // Calculate PV of lease payments
   let pv = 0;
-  const isAdvance = leaseData.PaymentTiming === 'Advance';
+  const isAdvance = paymentTiming === 'Advance';
   
   for (let i = 1; i <= periods; i++) {
     const discountFactor = isAdvance ? 
@@ -26,12 +30,12 @@ export function calculateIFRS16(leaseData: Partial<LeaseData>): CalculationResul
 
   // Generate schedules
   const cashflowSchedule = generateCashflowSchedule(leaseData, periods);
-  const amortizationSchedule = generateAmortizationSchedule(initialLiability, paymentPerPeriod, ratePerPeriod, periods);
+  const amortizationSchedule = generateAmortizationSchedule(initialLiability, paymentPerPeriod, ratePerPeriod, periods, initialROU);
   const depreciationSchedule = generateDepreciationSchedule(initialROU, periods);
   const journalEntries = generateJournalEntries(leaseData, initialLiability, initialROU, amortizationSchedule, depreciationSchedule);
 
-  const totalInterest = amortizationSchedule.reduce((sum, row) => sum + row.interest, 0);
-  const totalDepreciation = depreciationSchedule.reduce((sum, row) => sum + row.depreciation, 0);
+  const totalInterest = amortizationSchedule.reduce((sum, row) => sum + (row.interest || 0), 0);
+  const totalDepreciation = depreciationSchedule.reduce((sum, row) => sum + (row.depreciation || 0), 0);
 
   return {
     initialLiability,
@@ -59,7 +63,8 @@ function generateCashflowSchedule(leaseData: Partial<LeaseData>, periods: number
   const schedule = [];
   const startDate = new Date(leaseData.CommencementDate || '2025-01-01');
   const paymentAmount = leaseData.FixedPaymentPerPeriod || 0;
-  const monthsPerPeriod = 12 / getPeriodsPerYear(leaseData.PaymentFrequency || 'Monthly');
+  const frequency = leaseData.PaymentFrequency || 'Monthly';
+  const monthsPerPeriod = 12 / getPeriodsPerYear(frequency);
 
   for (let i = 1; i <= periods; i++) {
     const paymentDate = new Date(startDate);
@@ -75,25 +80,30 @@ function generateCashflowSchedule(leaseData: Partial<LeaseData>, periods: number
   return schedule;
 }
 
-function generateAmortizationSchedule(initialLiability: number, payment: number, rate: number, periods: number) {
+function generateAmortizationSchedule(initialLiability: number, payment: number, rate: number, periods: number, initialROU: number) {
   const schedule = [];
   let opening = initialLiability;
+  let remainingAsset = initialROU;
+  const depreciationPerPeriod = initialROU / periods;
 
   for (let i = 1; i <= periods; i++) {
-    const interest = opening * rate;
-    const principal = payment - interest;
-    const closing = opening - principal;
+    const interest = Math.round(opening * rate * 100) / 100;
+    const principal = Math.round((payment - interest) * 100) / 100;
+    const closing = Math.round((opening - principal) * 100) / 100;
+    const depreciation = Math.round(depreciationPerPeriod * 100) / 100;
+    remainingAsset = Math.round((remainingAsset - depreciation) * 100) / 100;
 
     schedule.push({
-      period: i,
-      opening: Math.round(opening * 100) / 100,
-      interest: Math.round(interest * 100) / 100,
+      month: i,
       payment: payment,
-      principal: Math.round(principal * 100) / 100,
-      closing: Math.round(closing * 100) / 100
+      interest: interest,
+      principal: principal,
+      remainingLiability: Math.max(0, closing),
+      depreciation: depreciation,
+      remainingAsset: Math.max(0, remainingAsset)
     });
 
-    opening = closing;
+    opening = Math.max(0, closing);
   }
 
   return schedule;
@@ -116,6 +126,7 @@ function generateDepreciationSchedule(initialROU: number, periods: number) {
 function generateJournalEntries(leaseData: Partial<LeaseData>, liability: number, rou: number, amort: any[], dep: any[]) {
   const entries = [];
   const commenceDate = leaseData.CommencementDate || '2025-01-01';
+  const currency = leaseData.Currency || 'NGN';
 
   // Initial recognition
   entries.push(
@@ -124,34 +135,65 @@ function generateJournalEntries(leaseData: Partial<LeaseData>, liability: number
       account: 'Right-of-use asset',
       dr: rou,
       cr: 0,
-      memo: 'Initial recognition'
+      memo: 'Initial recognition of ROU asset',
+      currency: currency
     },
     {
       date: commenceDate,
       account: 'Lease liability',
       dr: 0,
       cr: liability,
-      memo: 'Initial recognition'
+      memo: 'Initial recognition of lease liability',
+      currency: currency
     }
   );
 
   // Add first few periodic entries as examples
   if (amort.length > 0) {
     const firstPeriod = amort[0];
+    const secondMonth = new Date(commenceDate);
+    secondMonth.setMonth(secondMonth.getMonth() + 1);
+    
     entries.push(
       {
-        date: commenceDate,
+        date: secondMonth.toISOString().split('T')[0],
         account: 'Interest expense (lease)',
-        dr: firstPeriod.interest,
+        dr: firstPeriod.interest || 0,
         cr: 0,
-        memo: 'Interest expense'
+        memo: 'Monthly interest expense',
+        currency: currency
       },
       {
-        date: commenceDate,
+        date: secondMonth.toISOString().split('T')[0],
+        account: 'Lease liability',
+        dr: firstPeriod.principal || 0,
+        cr: 0,
+        memo: 'Principal reduction',
+        currency: currency
+      },
+      {
+        date: secondMonth.toISOString().split('T')[0],
         account: 'Cash',
         dr: 0,
-        cr: firstPeriod.payment,
-        memo: 'Lease payment'
+        cr: firstPeriod.payment || 0,
+        memo: 'Lease payment',
+        currency: currency
+      },
+      {
+        date: secondMonth.toISOString().split('T')[0],
+        account: 'Depreciation expense',
+        dr: firstPeriod.depreciation || 0,
+        cr: 0,
+        memo: 'Monthly depreciation',
+        currency: currency
+      },
+      {
+        date: secondMonth.toISOString().split('T')[0],
+        account: 'Accumulated depreciation - ROU asset',
+        dr: 0,
+        cr: firstPeriod.depreciation || 0,
+        memo: 'Accumulated depreciation',
+        currency: currency
       }
     );
   }

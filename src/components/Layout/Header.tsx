@@ -18,6 +18,7 @@ const navigation = [
     children: [
       { name: 'Contract Initiation', href: '/contract', icon: FileText },
       { name: 'Calculations', href: '/calculations', icon: Calculator },
+      { name: 'Disclosure & Journal Entries', href: '/disclosure-journals', icon: FileText },
       { name: 'Methodology', href: '/methodology', icon: BookOpen },
     ]
   },
