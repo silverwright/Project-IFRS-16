@@ -108,8 +108,23 @@ interface LeaseState {
   mode: 'MINIMAL' | 'FULL';
   calculations: CalculationResults | null;
   contractHtml: string | null;
+  savedContracts: SavedContract[];
   loading: boolean;
   error: string | null;
+}
+
+export interface SavedContract {
+  id: string;
+  contractId: string;
+  lessorName: string;
+  lesseeName: string;
+  assetDescription: string;
+  commencementDate: string;
+  status: 'pending' | 'approved';
+  createdAt: string;
+  updatedAt: string;
+  data: Partial<LeaseData>;
+  mode: 'MINIMAL' | 'FULL';
 }
 
 type LeaseAction =
@@ -117,6 +132,10 @@ type LeaseAction =
   | { type: 'SET_MODE'; payload: 'MINIMAL' | 'FULL' }
   | { type: 'SET_CALCULATIONS'; payload: CalculationResults }
   | { type: 'SET_CONTRACT_HTML'; payload: string }
+  | { type: 'SAVE_CONTRACT'; payload: SavedContract }
+  | { type: 'UPDATE_CONTRACT'; payload: SavedContract }
+  | { type: 'DELETE_CONTRACT'; payload: string }
+  | { type: 'LOAD_CONTRACT'; payload: Partial<LeaseData> }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESET' };
@@ -126,6 +145,7 @@ const initialState: LeaseState = {
   mode: 'MINIMAL',
   calculations: null,
   contractHtml: null,
+  savedContracts: [],
   loading: false,
   error: null,
 };
@@ -140,6 +160,25 @@ function leaseReducer(state: LeaseState, action: LeaseAction): LeaseState {
       return { ...state, calculations: action.payload };
     case 'SET_CONTRACT_HTML':
       return { ...state, contractHtml: action.payload };
+    case 'SAVE_CONTRACT':
+      return { 
+        ...state, 
+        savedContracts: [...state.savedContracts, action.payload] 
+      };
+    case 'UPDATE_CONTRACT':
+      return {
+        ...state,
+        savedContracts: state.savedContracts.map(contract =>
+          contract.id === action.payload.id ? action.payload : contract
+        )
+      };
+    case 'DELETE_CONTRACT':
+      return {
+        ...state,
+        savedContracts: state.savedContracts.filter(contract => contract.id !== action.payload)
+      };
+    case 'LOAD_CONTRACT':
+      return { ...state, leaseData: action.payload };
     case 'SET_LOADING':
       return { ...state, loading: action.payload };
     case 'SET_ERROR':
