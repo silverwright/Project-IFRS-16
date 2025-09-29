@@ -1,18 +1,7 @@
 import React, { useState } from 'react';
 import { useLeaseContext, SavedContract } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
-import { 
-  FileText, 
-  Edit, 
-  Eye, 
-  Trash2, 
-  Plus,
-  Calendar,
-  Building,
-  User,
-  CheckCircle,
-  Clock
-} from 'lucide-react';
+import { FileText, CreditCard as Edit, Eye, Trash2, Plus, Calendar, Building, User, CheckCircle, Clock } from 'lucide-react';
 
 interface ContractListProps {
   onEditContract: (contract: SavedContract) => void;
