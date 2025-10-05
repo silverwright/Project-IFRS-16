@@ -95,6 +95,7 @@ export function ContractInitiation() {
   };
 
   const handleCSVUploadComplete = () => {
+    setModeSelected(true);
     setActiveTab('form');
     setCurrentStep(1);
   };
