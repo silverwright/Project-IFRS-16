@@ -1,25 +1,45 @@
 import React, { useEffect } from 'react';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
-import { Download, FileText, Eye } from 'lucide-react';
+import { Download, FileText, Eye, Loader2 } from 'lucide-react';
 import { generateContractHTML } from '../../utils/contractGenerator';
 import { generateContractPDF } from '../../utils/contractPDFGenerator';
 
 export function ContractPreview() {
   const { state, dispatch } = useLeaseContext();
   const { leaseData, mode, contractHtml } = state;
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [isDownloading, setIsDownloading] = React.useState(false);
 
   useEffect(() => {
     // Generate contract HTML when component mounts
-    if (leaseData.ContractID) {
-      const html = generateContractHTML(leaseData, mode);
-      dispatch({ type: 'SET_CONTRACT_HTML', payload: html });
+    if (leaseData.ContractID && !contractHtml) {
+      setIsGenerating(true);
+      // Use setTimeout to prevent blocking the UI
+      setTimeout(() => {
+        try {
+          const html = generateContractHTML(leaseData, mode);
+          dispatch({ type: 'SET_CONTRACT_HTML', payload: html });
+        } catch (error) {
+          console.error('Error generating contract:', error);
+        } finally {
+          setIsGenerating(false);
+        }
+      }, 100);
     }
   }, [leaseData, mode, dispatch]);
 
-  const downloadContract = () => {
+  const downloadContract = async () => {
     if (leaseData.ContractID) {
-      generateContractPDF(leaseData, mode);
+      setIsDownloading(true);
+      try {
+        await generateContractPDF(leaseData, mode);
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert('Error generating PDF. Please try again.');
+      } finally {
+        setIsDownloading(false);
+      }
     }
   };
 
@@ -33,11 +53,20 @@ export function ContractPreview() {
           <Button
             variant="outline"
             onClick={downloadContract}
-            disabled={!leaseData.ContractID}
+            disabled={!leaseData.ContractID || isDownloading}
             className="flex items-center gap-2"
           >
-            <Download className="w-4 h-4" />
-            Download PDF
+            {isDownloading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Download PDF
+              </>
+            )}
           </Button>
         </div>
       </div>
@@ -82,7 +111,12 @@ export function ContractPreview() {
           <span className="text-sm font-medium text-slate-700">Contract Preview</span>
         </div>
         <div className="max-h-96 overflow-y-auto">
-          {contractHtml ? (
+          {isGenerating ? (
+            <div className="p-6 text-center">
+              <Loader2 className="w-8 h-8 mx-auto mb-2 text-blue-600 animate-spin" />
+              <p className="text-slate-600">Generating contract preview...</p>
+            </div>
+          ) : contractHtml ? (
             <div 
               className="p-6 prose prose-sm max-w-none"
               dangerouslySetInnerHTML={{ __html: contractHtml }}
@@ -90,7 +124,12 @@ export function ContractPreview() {
           ) : (
             <div className="p-6 text-center text-slate-500">
               <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
-              <p>Complete the form to generate contract preview</p>
+              <p>
+                {leaseData.ContractID 
+                  ? 'Loading contract preview...' 
+                  : 'Complete the form to generate contract preview'
+                }
+              </p>
             </div>
           )}
         </div>
