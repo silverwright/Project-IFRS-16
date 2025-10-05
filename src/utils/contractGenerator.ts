@@ -15,7 +15,7 @@ export function generateContractHTML(leaseData: Partial<LeaseData>, mode: 'MINIM
   if (mode === 'MINIMAL') {
     return `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <h1 style="margin-bottom: 1rem; color: #1e40af;">LEASE AGREEMENT</h1>
+        <h1 style="margin-bottom: 1rem; color: #1e40af;">EQUIPMENT LEASE AGREEMENT</h1>
         <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #ccc;">
           <strong>Contract ID:</strong> ${leaseData.ContractID || 'N/A'} | 
           <strong>Date:</strong> ${leaseData.ContractDate ? formatDate(leaseData.ContractDate) : 'N/A'}
@@ -27,22 +27,89 @@ export function generateContractHTML(leaseData: Partial<LeaseData>, mode: 'MINIM
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Lessee</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.LesseeEntity || 'N/A'}</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Asset</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.AssetDescription || 'N/A'} (${leaseData.AssetClass || 'N/A'})</td></tr>
           <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Commencement</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.CommencementDate ? formatDate(leaseData.CommencementDate) : 'N/A'}</td></tr>
-          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Term</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.NonCancellableYears || 0} years</td></tr>
-          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Payment</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} / ${leaseData.PaymentFrequency || 'N/A'}</td></tr>
-          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">IBR</td><td style="padding: 8px; border: 1px solid #ddd;">${((leaseData.IBR_Annual || 0) * 100).toFixed(2)}%</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Term (Firm)</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.NonCancellableYears || 0} years, ending ${leaseData.EndDateOriginal ? formatDate(leaseData.EndDateOriginal) : 'TBD'}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Rent</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} per ${leaseData.PaymentFrequency || 'period'}; payable in ${leaseData.PaymentTiming || 'advance'}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Escalation</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.EscalationType || 'None'}</td></tr>
+          <tr><td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">Currency / IBR</td><td style="padding: 8px; border: 1px solid #ddd;">${leaseData.Currency || 'NGN'} / IBR (annual): ${((leaseData.IBR_Annual || 0) * 100).toFixed(1)}%</td></tr>
         </table>
 
-        <h2 style="color: #1e40af; margin-top: 1.5rem;">1. Parties</h2>
-        <p>This Lease Agreement is between <strong>${leaseData.LessorName || 'Lessor'}</strong> (Lessor) and <strong>${leaseData.LesseeEntity || 'Lessee'}</strong> (Lessee).</p>
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">1. Parties and Definitions</h2>
+        <p>This agreement (the "Agreement") is between <strong>${leaseData.LessorName || 'Lessor'}</strong> (the "Lessor") and <strong>${leaseData.LesseeEntity || 'Lessee'}</strong> (the "Lessee").</p>
 
-        <h2 style="color: #1e40af; margin-top: 1.5rem;">2. Term</h2>
-        <p>The Lease starts on ${leaseData.CommencementDate ? formatDate(leaseData.CommencementDate) : 'TBD'} for ${leaseData.NonCancellableYears || 0} years, ending ${leaseData.EndDateOriginal ? formatDate(leaseData.EndDateOriginal) : 'TBD'}.</p>
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">2. Lease and Title</h2>
+        <p>2.1 Lessor leases the equipment described in the Schedule (the "Asset") to Lessee for the Term. Title to the Asset remains with Lessor at all times.</p>
+        <p>2.2 No right, title or interest passes to Lessee other than the leasehold interest. The Asset is a chattel separate from any site.</p>
 
-        <h2 style="color: #1e40af; margin-top: 1.5rem;">3. Rent & Payment</h2>
-        <p>Rent: ${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} per ${leaseData.PaymentFrequency || 'period'}, payable in ${leaseData.PaymentTiming || 'advance'}.</p>
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">3. Delivery, Commissioning and Acceptance</h2>
+        <p>3.1 Delivery and commissioning shall occur by ${leaseData.CommencementDate ? formatDate(leaseData.CommencementDate) : 'TBD'} (or as otherwise agreed).</p>
+        <p>3.2 Risk Transfer: Risk passes upon Signing of Acceptance Certificate; title remains with Lessor.</p>
+        <p>3.3 Acceptance: Upon successful commissioning and Lessee's execution of the Acceptance Certificate, the Asset is deemed accepted.</p>
 
-        <h2 style="color: #1e40af; margin-top: 1.5rem;">4. General Terms</h2>
-        <p>Standard lease terms apply including maintenance obligations, insurance requirements, and default provisions.</p>
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">4. Rent; Payment Mechanics; Escalation</h2>
+        <p>4.1 Lessee shall pay rent of ${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod || 0)} per ${leaseData.PaymentFrequency || 'period'} in ${leaseData.PaymentTiming || 'advance'} without set-off or counterclaim.</p>
+        <p>4.2 Late amounts accrue default interest at the maximum rate permitted by law.</p>
+        <p>4.3 Escalation: ${leaseData.EscalationType === 'CPI' ? `Rent is adjusted by reference to CPI (Base ${leaseData.BaseCPI || 0})` : leaseData.EscalationType === 'Fixed%' ? `Fixed escalation of ${((leaseData.FixedEscalationPct || 0) * 100).toFixed(1)}% annually` : 'No escalation applies'}.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">5. Taxes; Withholding; Gross-Up</h2>
+        <p>All amounts are exclusive of taxes. If Lessee is required by law to withhold or deduct taxes from a payment, Lessee shall gross-up so that Lessor receives the amount it would have received absent such withholding, except for taxes on Lessor's net income.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">6. Use; Maintenance; Relocation</h2>
+        <p>6.1 Lessee shall use the Asset solely for lawful business purposes and keep it in good working order per manufacturer specs.</p>
+        <p>6.2 No relocation without Lessor consent.</p>
+        <p>6.3 Embedded software is licensed on a non-exclusive, non-transferable, term-limited basis.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">7. Insurance</h2>
+        <p>Lessee shall insure the Asset for replacement value and maintain adequate third-party liability coverage with a reputable insurer.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">8. Compliance Undertakings</h2>
+        <p>Lessee shall comply with applicable law, maintain anti-bribery and sanctions controls, and operate the Asset in line with ESG requirements.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">9. Events of Default; Remedies</h2>
+        <p>Events include non-payment, breach, insolvency, unlawful use, failure to insure, or unauthorised relocation. On default, Lessor may terminate, demand payment, repossess, and claim damages.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">10. Risk; Loss and Damage</h2>
+        <p>From risk transfer, Lessee bears risk of loss or damage (except Lessor's wilful misconduct). Insurance proceeds are applied to repair or settlement.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">11. Assignment and Sub-leasing</h2>
+        <p>Lessee may not assign or sub-lease without consent. Lessor may assign or finance rights with notice.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">12. Force Majeure</h2>
+        <p>Neither Party is liable for failure or delay caused by events beyond its control, provided mitigation efforts are made.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">13. Dispute Resolution; Governing Law</h2>
+        <p>Disputes are referred to arbitration under applicable rules. This Agreement is governed by the laws of the relevant jurisdiction.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">14. Notices</h2>
+        <p>Notices shall be delivered to addresses in the Schedule. Email may be used for operational communications.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">15. Entire Agreement; Variation; Severability</h2>
+        <p>This Agreement is the entire agreement. Amendments must be in writing signed by both Parties. Invalid provisions do not affect the remainder.</p>
+
+        <h2 style="color: #black; margin-top: 1.5rem; font-weight: bold;">16. Signatures</h2>
+        <p>
+          <strong style="display: block; text-align: left;">Lessor:</strong>
+          <div style="margin-left: 35%;">
+            ${leaseData.LessorName || 'N/A'}<br>
+            By: ____________________<br>
+            Name: ____________________<br>
+            Title: Director<br>
+            Date: ${leaseData.ContractDate ? formatDate(leaseData.ContractDate) : '________'}
+          </div>
+        </p>
+        <p style="margin-top: 2rem;">
+          <strong style="display: block; text-align: left;">Lessee:</strong>
+          <div style="margin-left: 35%;">
+            ${leaseData.LesseeEntity || 'N/A'}<br>
+            By: ____________________<br>
+            Name: ____________________<br>
+            Title: Authorized Signatory<br>
+            Date: ${leaseData.ContractDate ? formatDate(leaseData.ContractDate) : '________'}
+          </div>
+        </p>
+
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ccc; font-size: 0.9em; color: #666;">
+          <p><em>This is a system-generated contract preview. Final execution requires legal review and party signatures.</em></p>
+        </div>
       </div>
     `;
   }
