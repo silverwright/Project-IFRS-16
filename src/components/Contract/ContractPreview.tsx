@@ -3,7 +3,7 @@ import { useLeaseContext } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
 import { Download, FileText, Eye } from 'lucide-react';
 import { generateContractHTML } from '../../utils/contractGenerator';
-import { useRef } from 'react';
+import { generateContractPDF } from '../../utils/contractPDFGenerator';
 
 export function ContractPreview() {
   const { state, dispatch } = useLeaseContext();
@@ -18,16 +18,8 @@ export function ContractPreview() {
   }, [leaseData, mode, dispatch]);
 
   const downloadContract = () => {
-    if (contractHtml) {
-      const blob = new Blob([contractHtml], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `LeaseContract_${mode.toLowerCase()}_${leaseData.ContractID}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+    if (leaseData.ContractID) {
+      generateContractPDF(leaseData, mode);
     }
   };
 
@@ -41,11 +33,11 @@ export function ContractPreview() {
           <Button
             variant="outline"
             onClick={downloadContract}
-            disabled={!contractHtml}
+            disabled={!leaseData.ContractID}
             className="flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
-            Download HTML
+            Download PDF
           </Button>
         </div>
       </div>
