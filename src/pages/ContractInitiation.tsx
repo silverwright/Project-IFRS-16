@@ -91,10 +91,12 @@ export function ContractInitiation() {
     setEditingContract(null);
     dispatch({ type: 'RESET' });
     setModeSelected(false);
-    setActiveTab('form');
+    setCurrentStep(1);
+    setActiveTab('list');
   };
 
   const handleCSVUploadComplete = () => {
+    dispatch({ type: 'SET_MODE', payload: 'MINIMAL' });
     setModeSelected(true);
     setActiveTab('form');
     setCurrentStep(1);
@@ -191,18 +193,30 @@ export function ContractInitiation() {
               {/* Navigation */}
               <div className="flex justify-between">
                 <Button
+                  onClick={() => {
+                    setModeSelected(false);
+                    setCurrentStep(1);
+                    setActiveTab('list');
+                    setEditingContract(null);
+                    dispatch({ type: 'RESET' });
+                  }}
                   variant="outline"
-                  onClick={resetMode}
                   className="flex items-center gap-2"
                 >
-                  <RefreshCw className="w-4 h-4" />
-                  Back to Contract List
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Mode Selection
                 </Button>
 
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={prevStep}
+                    onClick={() => {
+                      setModeSelected(false);
+                      setCurrentStep(1);
+                      setActiveTab('list');
+                      setEditingContract(null);
+                      dispatch({ type: 'RESET' });
+                    }}
                     disabled={currentStep === 1}
                     className="flex items-center gap-2"
                   >

@@ -108,6 +108,7 @@ export function CSVUpload({ onUploadComplete }: CSVUploadProps) {
       const csvData = parseCSV(text);
       const leaseData = mapCSVToLeaseData(csvData);
       
+      dispatch({ type: 'SET_MODE', payload: 'MINIMAL' });
       dispatch({ type: 'SET_LEASE_DATA', payload: leaseData });
       setUploadStatus('success');
       setTimeout(() => {

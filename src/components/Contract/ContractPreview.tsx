@@ -1,74 +1,62 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
-import { Download, FileText, Eye, Loader2 } from 'lucide-react';
-import { generateContractHTML } from '../../utils/contractGenerator';
-import { generateContractPDF } from '../../utils/contractPDFGenerator';
+import { Download, FileText, Eye } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
 export function ContractPreview() {
-  const { state, dispatch } = useLeaseContext();
-  const { leaseData, mode, contractHtml } = state;
-  const [isGenerating, setIsGenerating] = React.useState(false);
-  const [isDownloading, setIsDownloading] = React.useState(false);
+  const { state } = useLeaseContext();
+  const { leaseData, mode } = state;
 
-  useEffect(() => {
-    // Generate contract HTML when component mounts
-    if (leaseData.ContractID && !contractHtml) {
-      setIsGenerating(true);
-      // Use setTimeout to prevent blocking the UI
-      setTimeout(() => {
-        try {
-          const html = generateContractHTML(leaseData, mode);
-          dispatch({ type: 'SET_CONTRACT_HTML', payload: html });
-        } catch (error) {
-          console.error('Error generating contract:', error);
-        } finally {
-          setIsGenerating(false);
-        }
-      }, 100);
-    }
-  }, [leaseData, mode, dispatch]);
-
-  const downloadContract = async () => {
-    if (leaseData.ContractID) {
-      setIsDownloading(true);
-      try {
-        await generateContractPDF(leaseData, mode);
-      } catch (error) {
-        console.error('Error generating PDF:', error);
-        alert('Error generating PDF. Please try again.');
-      } finally {
-        setIsDownloading(false);
-      }
-    }
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount || 0);
   };
 
-  
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'TBD';
+    return new Date(dateStr).toLocaleDateString('en-GB');
+  };
+
+  const downloadPDF = () => {
+    try {
+      const pdf = new jsPDF();
+      
+      // Add title
+      pdf.setFontSize(16);
+      pdf.text('EQUIPMENT LEASE AGREEMENT', 20, 30);
+      
+      // Add basic info
+      pdf.setFontSize(12);
+      pdf.text(`Contract ID: ${leaseData.ContractID || 'N/A'}`, 20, 50);
+      pdf.text(`Lessor: ${leaseData.LessorName || 'N/A'}`, 20, 60);
+      pdf.text(`Lessee: ${leaseData.LesseeEntity || 'N/A'}`, 20, 70);
+      pdf.text(`Asset: ${leaseData.AssetDescription || 'N/A'}`, 20, 80);
+      pdf.text(`Term: ${leaseData.NonCancellableYears || 0} years`, 20, 90);
+      pdf.text(`Payment: ${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod)} per ${leaseData.PaymentFrequency}`, 20, 100);
+      
+      pdf.save(`${leaseData.ContractID || 'lease-contract'}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-slate-900">Contract Preview</h3>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={downloadContract}
-            disabled={!leaseData.ContractID || isDownloading}
-            className="flex items-center gap-2"
-          >
-            {isDownloading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Generating PDF...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Download PDF
-              </>
-            )}
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={downloadPDF}
+          disabled={!leaseData.ContractID}
+          className="flex items-center gap-2"
+        >
+          <Download className="w-4 h-4" />
+          Download PDF
+        </Button>
       </div>
 
       {/* Contract Summary */}
@@ -94,7 +82,7 @@ export function ContractPreview() {
           <div>
             <span className="text-slate-600">Payment:</span>
             <span className="ml-2 font-medium">
-              {leaseData.Currency} {(leaseData.FixedPaymentPerPeriod || 0).toLocaleString()} / {leaseData.PaymentFrequency}
+              {leaseData.Currency} {formatCurrency(leaseData.FixedPaymentPerPeriod)} / {leaseData.PaymentFrequency}
             </span>
           </div>
           <div>
@@ -110,26 +98,70 @@ export function ContractPreview() {
           <Eye className="w-4 h-4 text-slate-600" />
           <span className="text-sm font-medium text-slate-700">Contract Preview</span>
         </div>
-        <div className="max-h-96 overflow-y-auto">
-          {isGenerating ? (
-            <div className="p-6 text-center">
-              <Loader2 className="w-8 h-8 mx-auto mb-2 text-blue-600 animate-spin" />
-              <p className="text-slate-600">Generating contract preview...</p>
-            </div>
-          ) : contractHtml ? (
-            <div 
-              className="p-6 prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: contractHtml }}
-            />
-          ) : (
-            <div className="p-6 text-center text-slate-500">
-              <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
-              <p>
-                {leaseData.ContractID 
-                  ? 'Loading contract preview...' 
-                  : 'Complete the form to generate contract preview'
-                }
+        <div className="max-h-96 overflow-y-auto p-6">
+          {leaseData.ContractID ? (
+            <div className="prose prose-sm max-w-none">
+              <h1 className="text-xl font-bold text-blue-600 mb-4">EQUIPMENT LEASE AGREEMENT</h1>
+              
+              <div className="mb-4 pb-4 border-b border-slate-200">
+                <strong>Contract ID:</strong> {leaseData.ContractID} | 
+                <strong> Date:</strong> {formatDate(leaseData.ContractDate || '')}
+              </div>
+
+              <h2 className="text-lg font-semibold text-blue-600 mt-6 mb-3">Schedule — Key Commercial Terms</h2>
+              <table className="w-full border-collapse border border-slate-300 mb-6">
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Lessor</td>
+                    <td className="border border-slate-300 p-2">{leaseData.LessorName || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Lessee</td>
+                    <td className="border border-slate-300 p-2">{leaseData.LesseeEntity || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Asset</td>
+                    <td className="border border-slate-300 p-2">{leaseData.AssetDescription || 'N/A'}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Term</td>
+                    <td className="border border-slate-300 p-2">{leaseData.NonCancellableYears || 0} years</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Rent</td>
+                    <td className="border border-slate-300 p-2">
+                      {leaseData.Currency} {formatCurrency(leaseData.FixedPaymentPerPeriod)} per {leaseData.PaymentFrequency || 'period'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <h2 className="text-lg font-semibold mt-6 mb-3">1. Parties and Definitions</h2>
+              <p className="mb-4">
+                This agreement is between <strong>{leaseData.LessorName || 'Lessor'}</strong> (the "Lessor") 
+                and <strong>{leaseData.LesseeEntity || 'Lessee'}</strong> (the "Lessee").
               </p>
+
+              <h2 className="text-lg font-semibold mt-6 mb-3">2. Lease and Title</h2>
+              <p className="mb-4">
+                Lessor leases the equipment described in the Schedule to Lessee for the Term. 
+                Title to the Asset remains with Lessor at all times.
+              </p>
+
+              <h2 className="text-lg font-semibold mt-6 mb-3">3. Payment Terms</h2>
+              <p className="mb-4">
+                Lessee shall pay rent of {leaseData.Currency} {formatCurrency(leaseData.FixedPaymentPerPeriod)} 
+                per {leaseData.PaymentFrequency || 'period'} in {leaseData.PaymentTiming || 'advance'}.
+              </p>
+
+              <div className="mt-8 pt-4 border-t border-slate-200 text-sm text-slate-600">
+                <p><em>This is a system-generated contract preview. Full contract available in PDF download.</em></p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-slate-500">
+              <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+              <p>Complete the form to generate contract preview</p>
             </div>
           )}
         </div>

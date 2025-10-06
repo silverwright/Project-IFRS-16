@@ -1,4 +1,3 @@
-// src/pages/Home.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -114,12 +113,11 @@ export function Home() {
   ];
 
   return (
-    <div className="w-full font-sans">
+    <div className="w-full min-h-screen font-sans">
       {/* Hero Section */}
       <section
-        className="relative w-screen min-h-screen flex flex-col items-center justify-center text-center bg-cover bg-center -mt-16 md:-mt-20"
- 
->
+        className="relative w-full min-h-screen flex flex-col items-center justify-center text-center bg-cover bg-center"
+      >
         <img
           src="/LandingPage.jpg"
           alt="Landing Background"

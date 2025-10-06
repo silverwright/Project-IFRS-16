@@ -15,9 +15,9 @@ function App() {
   return (
     <LeaseProvider>
       <Router>
-        <div className="flex flex-col h-screen">
+        <div className="min-h-screen bg-gray-50">
           <Header />
-          <main className="flex-1 overflow-x-hidden overflow-y-auto">
+          <main>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/contract" element={<ContractInitiation />} />
@@ -27,8 +27,6 @@ function App() {
               <Route path="/education" element={<Education />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/reports" element={<Reports />} />
-              {/* catch-all redirect */}
-              <Route path="*" element={<Home />} />
             </Routes>
           </main>
         </div>
