@@ -193,13 +193,7 @@ export function ContractInitiation() {
               {/* Navigation */}
               <div className="flex justify-between">
                 <Button
-                  onClick={() => {
-                    setModeSelected(false);
-                    setCurrentStep(1);
-                    setActiveTab('list');
-                    setEditingContract(null);
-                    dispatch({ type: 'RESET' });
-                  }}
+                  onClick={prevStep}
                   variant="outline"
                   className="flex items-center gap-2"
                 >

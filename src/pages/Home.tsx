@@ -116,7 +116,7 @@ export function Home() {
     <div className="w-full min-h-screen font-sans">
       {/* Hero Section */}
       <section
-        className="relative w-full min-h-screen flex flex-col items-center justify-center text-center bg-cover bg-center"
+        className="relative w-full min-h-screen flex flex-col items-center justify-center text-center"
       >
         <img
           src="/LandingPage.jpg"

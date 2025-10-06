@@ -15,9 +15,9 @@ function App() {
   return (
     <LeaseProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 overflow-x-hidden">
           <Header />
-          <main>
+          <main className="w-full">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/contract" element={<ContractInitiation />} />

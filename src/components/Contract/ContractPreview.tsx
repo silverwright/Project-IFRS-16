@@ -1,47 +1,72 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLeaseContext } from '../../context/LeaseContext';
 import { Button } from '../UI/Button';
-import { Download, FileText, Eye } from 'lucide-react';
-import { jsPDF } from 'jspdf';
+import { Download, FileText, Eye, Loader2 } from 'lucide-react';
+import { generateContractHTML } from '../../utils/contractGenerator';
+import { generateContractPDF } from '../../utils/contractPDFGenerator';
 
 export function ContractPreview() {
   const { state } = useLeaseContext();
   const { leaseData, mode } = state;
+  const [contractHtml, setContractHtml] = useState<string>('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    if (leaseData.ContractID) {
+      generateContractPreview();
+    } else {
+      setContractHtml('');
+    }
+  }, [leaseData, mode]);
+
+  const generateContractPreview = async () => {
+    setIsGenerating(true);
+    setError('');
+    
+    try {
+      // Use setTimeout to prevent blocking the UI
+      setTimeout(() => {
+        try {
+          const html = generateContractHTML(leaseData, mode);
+          setContractHtml(html);
+          setIsGenerating(false);
+        } catch (err) {
+          console.error('Error generating contract:', err);
+          setError('Failed to generate contract preview');
+          setIsGenerating(false);
+        }
+      }, 100);
+    } catch (err) {
+      console.error('Error in generateContractPreview:', err);
+      setError('Failed to generate contract preview');
+      setIsGenerating(false);
+    }
+  };
+
+  const downloadPDF = async () => {
+    if (!leaseData.ContractID) {
+      alert('Please complete the contract details first');
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      await generateContractPDF(leaseData, mode);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount || 0);
-  };
-
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'TBD';
-    return new Date(dateStr).toLocaleDateString('en-GB');
-  };
-
-  const downloadPDF = () => {
-    try {
-      const pdf = new jsPDF();
-      
-      // Add title
-      pdf.setFontSize(16);
-      pdf.text('EQUIPMENT LEASE AGREEMENT', 20, 30);
-      
-      // Add basic info
-      pdf.setFontSize(12);
-      pdf.text(`Contract ID: ${leaseData.ContractID || 'N/A'}`, 20, 50);
-      pdf.text(`Lessor: ${leaseData.LessorName || 'N/A'}`, 20, 60);
-      pdf.text(`Lessee: ${leaseData.LesseeEntity || 'N/A'}`, 20, 70);
-      pdf.text(`Asset: ${leaseData.AssetDescription || 'N/A'}`, 20, 80);
-      pdf.text(`Term: ${leaseData.NonCancellableYears || 0} years`, 20, 90);
-      pdf.text(`Payment: ${leaseData.Currency} ${formatCurrency(leaseData.FixedPaymentPerPeriod)} per ${leaseData.PaymentFrequency}`, 20, 100);
-      
-      pdf.save(`${leaseData.ContractID || 'lease-contract'}.pdf`);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
-    }
   };
 
   return (
@@ -51,11 +76,20 @@ export function ContractPreview() {
         <Button
           variant="outline"
           onClick={downloadPDF}
-          disabled={!leaseData.ContractID}
+          disabled={!leaseData.ContractID || isDownloading}
           className="flex items-center gap-2"
         >
-          <Download className="w-4 h-4" />
-          Download PDF
+          {isDownloading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Generating PDF...
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              Download PDF
+            </>
+          )}
         </Button>
       </div>
 
@@ -99,67 +133,23 @@ export function ContractPreview() {
           <span className="text-sm font-medium text-slate-700">Contract Preview</span>
         </div>
         <div className="max-h-96 overflow-y-auto p-6">
-          {leaseData.ContractID ? (
-            <div className="prose prose-sm max-w-none">
-              <h1 className="text-xl font-bold text-blue-600 mb-4">EQUIPMENT LEASE AGREEMENT</h1>
-              
-              <div className="mb-4 pb-4 border-b border-slate-200">
-                <strong>Contract ID:</strong> {leaseData.ContractID} | 
-                <strong> Date:</strong> {formatDate(leaseData.ContractDate || '')}
-              </div>
-
-              <h2 className="text-lg font-semibold text-blue-600 mt-6 mb-3">Schedule — Key Commercial Terms</h2>
-              <table className="w-full border-collapse border border-slate-300 mb-6">
-                <tbody>
-                  <tr>
-                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Lessor</td>
-                    <td className="border border-slate-300 p-2">{leaseData.LessorName || 'N/A'}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Lessee</td>
-                    <td className="border border-slate-300 p-2">{leaseData.LesseeEntity || 'N/A'}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Asset</td>
-                    <td className="border border-slate-300 p-2">{leaseData.AssetDescription || 'N/A'}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Term</td>
-                    <td className="border border-slate-300 p-2">{leaseData.NonCancellableYears || 0} years</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-slate-300 p-2 font-semibold bg-slate-50">Rent</td>
-                    <td className="border border-slate-300 p-2">
-                      {leaseData.Currency} {formatCurrency(leaseData.FixedPaymentPerPeriod)} per {leaseData.PaymentFrequency || 'period'}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <h2 className="text-lg font-semibold mt-6 mb-3">1. Parties and Definitions</h2>
-              <p className="mb-4">
-                This agreement is between <strong>{leaseData.LessorName || 'Lessor'}</strong> (the "Lessor") 
-                and <strong>{leaseData.LesseeEntity || 'Lessee'}</strong> (the "Lessee").
-              </p>
-
-              <h2 className="text-lg font-semibold mt-6 mb-3">2. Lease and Title</h2>
-              <p className="mb-4">
-                Lessor leases the equipment described in the Schedule to Lessee for the Term. 
-                Title to the Asset remains with Lessor at all times.
-              </p>
-
-              <h2 className="text-lg font-semibold mt-6 mb-3">3. Payment Terms</h2>
-              <p className="mb-4">
-                Lessee shall pay rent of {leaseData.Currency} {formatCurrency(leaseData.FixedPaymentPerPeriod)} 
-                per {leaseData.PaymentFrequency || 'period'} in {leaseData.PaymentTiming || 'advance'}.
-              </p>
-
-              <div className="mt-8 pt-4 border-t border-slate-200 text-sm text-slate-600">
-                <p><em>This is a system-generated contract preview. Full contract available in PDF download.</em></p>
-              </div>
+          {isGenerating ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600 mr-2" />
+              <span className="text-slate-600">Generating contract preview...</span>
             </div>
+          ) : error ? (
+            <div className="text-center text-red-500 py-8">
+              <FileText className="w-8 h-8 mx-auto mb-2 text-red-400" />
+              <p>{error}</p>
+            </div>
+          ) : contractHtml ? (
+            <div 
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: contractHtml }}
+            />
           ) : (
-            <div className="text-center text-slate-500">
+            <div className="text-center text-slate-500 py-8">
               <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
               <p>Complete the form to generate contract preview</p>
             </div>
